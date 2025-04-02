@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Browser</title>
+    <style>
+        .main-header {
+            background-color: #6d318d;
+            width: 100%;
+            padding: 15px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 10px;
+        }
+        .header-icon {
+            width: 30px;
+            height: 30px;
+        }
+        .header-title {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            overflow-y: auto;
+        }
+        .top-image {
+            margin-top: 15px;
+            width: 100px;
+            height: auto;
+        }
+        .title {
+            margin-top: 30px;
+            font-size: 24px;
+            color: #ffb44c;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 110px);
+            grid-template-rows: repeat(3, 110px);
+            gap: 8px;
+            margin: 60px 0 20px 0;
+        }
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background-color: transparent;
+        }
+        .grid-item img {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+        .grid-item:hover img {
+            transform: scale(1.1);
+        }
+        .grid-item:active img {
+            transform: scale(0.95);
+        }
+        .grid-item-name {
+            margin-top: 2px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #6d318d;
+            text-align: center;
+        }
+        .blank-space {
+            height: 150px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .blank-space button {
+            padding: 12px 50px;
+            font-size: 16px;
+            background-color: #6d318d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .blank-space button:hover {
+            background-color: #5a2a6d;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6d318d;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <img src="images/home-icon.png" alt="Home Icon" class="header-icon">
+        <h1 class="header-title">Home</h1>
+    </header>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Done...</p>
+    </div>
+
+    <img src="images/pilogo.png" alt="Pi Logo" class="top-image">
+    <h1 class="title">Welcome to the Pi Browser</h1>
+
+    <div class="grid-container">
+        <div class="grid-item" onclick="window.location.href='https://fireside.pinet.com/me'">
+            <img src="images/fireside.png" alt="Fire Side">
+            <div class="grid-item-name">Fireside</div>
+        </div>
+        <div class="grid-item" onclick="window.open('wallet.html', '_blank')">
+            <img src="images/wallet.png" alt="Wallet">
+            <div class="grid-item-name">Wallet</div>
+        </div>
+        <div class="grid-item" onclick="window.open('shop.html', '_blank')">
+            <img src="images/brainstorm.png" alt="Brainstorm">
+            <div class="grid-item-name">Shop</div>
+        </div>
+        <div class="grid-item" onclick="window.location.href='https://mine.pinet.com'">
+            <img src="images/mine.png" alt="Mine">
+            <div class="grid-item-name">Mine</div>
+        </div>
+        <div class="grid-item" onclick="window.location.href='https://blockexplorer.minepi.com'">
+            <img src="images/blockchain.jpg" alt="Blockchain">
+            <div class="grid-item-name">Blockchain</div>
+        </div>
+        <div class="grid-item" onclick="window.location.href='https://develop.pinet.com'">
+            <img src="images/develop.png" alt="Develop">
+            <div class="grid-item-name">Develop</div>
+        </div>
+        <div class="grid-item" onclick="window.location.href='https://kyc.pinet.com'">
+            <img src="images/kyc.png" alt="KYC">
+            <div class="grid-item-name">KYC</div>
+        </div>
+        <div class="grid-item" onclick="window.location.href='https://chat.pinet.com'">
+            <img src="images/chat.jpg" alt="Chat">
+            <div class="grid-item-name">Chat</div>
+        </div>
+        <div class="grid-item" onclick="window.location.href='https://profiles.pinet.com'">
+            <img src="images/profile.png" alt="Profile">
+            <div class="grid-item-name">Profile</div>
+        </div>
+    </div>
+
+    <div class="blank-space">
+        <button onclick="window.location.href='https://ecosystem.pinet.com'">EXPLORE THE ECOSYSTEM</button>
+    </div>
+</body>
+</html>
